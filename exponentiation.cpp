@@ -37,7 +37,7 @@ int solve(ll a, ll n) {
 }
 int main() {
     ios_base::sync_with_stdio(false);
-    cin.tie(NUll);
+    cin.tie(NULL);
     int tt;
     cin >> tt;
     while (tt--) {
