@@ -1,0 +1,497 @@
+#include <bits/stdc++.h>
+
+using namespace std;
+using namespace std::chrono;
+
+using ll = long long;
+using ld = long double;
+using u64 = unsigned long long;
+using u128 = __uint128_t;
+using ull = unsigned long long;
+
+const int MOD = 1e9+7;
+const ld PI = acos((ld)-1);
+
+template<class T> bool ckmin(T &a, const T &b) {return b < a ? a = b, 1 : 0;}
+template<class T> bool ckmax(T &a, const T &b) {return a < b ? a = b, 1 : 0;}
+
+struct PairHash {
+    size_t operator()(const pair<int,int>& p) const {
+        return hash<long long>()(((long long)p.first << 32) ^ p.second);
+    }
+};
+
+template<uint mod = MOD>
+struct Mint {
+    uint x;
+
+    Mint() : x(0) {};
+
+    friend uint abs(const Mint& a) {
+        return a.x;
+    }
+
+    Mint(ll _x) {
+        _x %= mod;
+        if (_x < 0) _x += mod;
+        x = _x;
+    }
+
+    Mint& operator+=(const Mint& a) {
+        x += a.x;
+        if (x >= mod) x -= mod;
+        return *this;
+    }
+
+    Mint& operator-= (const Mint& a) {
+        x += mod - a.x;
+        if (x >= mod) x -= mod;
+        return *this;
+    }
+
+    friend ostream& operator<<(ostream& os, const Mint& a) {
+        return os << a.x;
+    }
+
+    Mint& operator*= (const Mint& a) {
+        x = (ull)x * a.x % mod;
+        return *this;
+    }
+
+    Mint operator+ (const Mint& a) const {
+        return Mint(*this) += a;
+    }
+
+    Mint operator- (const Mint& a) const {
+        return Mint(*this) -= a;
+    }
+
+    Mint operator* (const Mint& a) const {
+        return Mint(*this) *= a;
+    }
+
+    Mint pow(ll pw) const {
+        Mint ans = 1;
+        Mint curr = *this;
+        while (pw) {
+            if (pw & 1) ans *= curr;
+            curr *= curr;
+            pw >>= 1;
+        }
+        return ans;
+    }
+
+    Mint inv() const {
+        assert(x != 0 && gcd(x, mod) == 1);
+        uint t = x;
+        uint ans = 1;
+        while (t != 1) {
+            uint q = mod / t;
+            ans = ull(ans) * (mod - q) % mod; 
+            t = mod % t;
+        }
+        return Mint(ans);
+    }
+
+    Mint& operator/= (const Mint& a) {
+        return *this *= a.inv();
+    }
+
+    Mint operator/ (const Mint& a) const {
+        return Mint(*this) /= a;
+    }
+
+    bool operator== (const Mint& a) const {
+        return x == a.x;
+    }
+
+    bool operator!= (const Mint& a) const {
+        return x != a.x;
+    }
+
+    bool operator<= (const Mint& a) const {
+        return x <= a.x;
+    }
+
+    bool operator< (const Mint& a) const {
+        return x < a.x;
+    }
+
+    bool operator>= (const Mint& a) const {
+        return x >= a.x;
+    }
+
+    bool operator> (const Mint& a) const {
+        return x > a.x;
+    }
+
+    bool sqrt(Mint& a) const {
+        return true;
+    }
+};
+
+template<uint mod = MOD>
+struct Factorials {
+    using M = Mint<mod>;
+    vector<M> fact, ifact;
+    Factorials () {};
+    Factorials (int n) {
+        init(n);
+    }
+    void init(int n) {
+        fact.assign(n + 1, 1);
+        ifact.assign(n + 1, 1);
+        for (int i = 1; i <= n; i++) {
+            fact[i] = fact[i - 1] * i;
+        }
+        ifact[n] = fact[n].inv();
+        for (int i = n - 1; i > 1; i--) {
+            ifact[i] = ifact[i + 1] * (i + 1);
+        }
+    }
+
+    M factorial(int n) {
+        return fact[n];
+    }
+
+    M invFactorial(int n) {
+        return ifact[n];
+    }
+
+    M C(int n, int r) {
+        if (r < 0 || r > n) return 0;
+        return fact[n] * ifact[r] * ifact[n - r];
+    }
+
+    M P(int n, int r) {
+        if (r < 0 || r > n) return 0;
+        return fact[n] * ifact[n - r];
+    }
+};
+
+
+template<typename T>
+class Matrix {
+private:
+    int R, C;
+    vector<T> a;
+
+public:
+    Matrix(int r = 0, int c = 0, T val = T())
+        : R(r), C(c), a(r * c, val) {}
+
+    int rows() const { return R; }
+    int cols() const { return C; }
+
+    T& operator()(int i, int j) {
+        return a[i * C + j];
+    }
+
+    const T& operator()(int i, int j) const {
+        return a[i * C + j];
+    }
+
+    static Matrix identity(int n) {
+        Matrix I(n, n);
+        for (int i = 0; i < n; i++) I(i, i) = 1;
+        return I;
+    }
+
+    Matrix operator+(const Matrix& B) const {
+        assert(R == B.R && C == B.C);
+        Matrix res(R, C);
+        for (int i = 0; i < R * C; i++) res.a[i] = a[i] + B.a[i];
+        return res;
+    }
+
+    Matrix operator-(const Matrix& B) const {
+        assert(R == B.R && C == B.C);
+        Matrix res(R, C);
+        for (int i = 0; i < R * C; i++) res.a[i] = a[i] - B.a[i];
+        return res;
+    }
+
+    Matrix operator*(T k) const {
+        Matrix res(R, C);
+        for (int i = 0; i < R * C; i++) res.a[i] = a[i] * k;
+        return res;
+    }
+
+    Matrix operator/(T k) const {
+        Matrix res(R, C);
+        for (int i = 0; i < R * C; i++) res.a[i] = a[i] / k;
+        return res;
+    }
+
+    Matrix& operator+=(const Matrix& B) {
+        assert(R == B.R && C == B.C);
+        for (int i = 0; i < R * C; i++) a[i] += B.a[i];
+        return *this;
+    }
+
+    Matrix& operator-=(const Matrix& B) {
+        assert(R == B.R && C == B.C);
+        for (int i = 0; i < R * C; i++) a[i] -= B.a[i];
+        return *this;
+    }
+
+    Matrix& operator*=(T k) {
+        for (int i = 0; i < R * C; i++) a[i] *= k;
+        return *this;
+    }
+
+    Matrix& operator/=(T k) {
+        for (int i = 0; i < R * C; i++) a[i] /= k;
+        return *this;
+    }
+
+    Matrix operator*(const Matrix& B) const {
+        assert(C == B.R);
+        Matrix res(R, B.C, 0);
+        for (int i = 0; i < R; i++) {
+            for (int k = 0; k < C; k++) {
+                T cur = (*this)(i, k);
+                for (int j = 0; j < B.C; j++) {
+                    res(i, j) += cur * B(k, j);
+                }
+            }
+        }
+        return res;
+    }
+
+    Matrix& operator*=(const Matrix& B) {
+        *this = *this * B;
+        return *this;
+    }
+
+    Matrix power(long long e) const {
+        assert(R == C);
+        Matrix base = *this;
+        Matrix ans = identity(R);
+        while (e > 0) {
+            if (e & 1) ans *= base;
+            base *= base;
+            e >>= 1;
+        }
+        return ans;
+    }
+
+    Matrix transpose() const {
+        Matrix res(C, R);
+        for (int i = 0; i < R; i++) {
+            for (int j = 0; j < C; j++) {
+                res(j, i) = (*this)(i, j);
+            }
+        }
+        return res;
+    }
+
+    pair<int, vector<T>> gauss(const Matrix<T>& A, const Matrix<T>& b) {
+        assert(b.cols() == 1); 
+        assert(A.rows() == b.rows()); 
+        Matrix<T> Aug(A.rows(), A.cols() + 1); 
+        int m = A.rows(); 
+        int n = A.cols(); 
+        for (int i = 0; i < A.rows(); i++) { 
+            for (int j = 0; j < A.cols() + 1; j++) { 
+                if (j < A.cols()) { 
+                    Aug(i, j) = A(i, j); 
+                } 
+                else { 
+                    Aug(i, j) = b(i, 0); 
+                } 
+            } 
+        }
+        vector<int> where(n, -1);
+        vector<T> ans(n, T());
+        int rank = 0; // essentially represents the number of pivots found so far, used this to keep track or row exchanges
+        for (int col = 0; col < n && rank < m; col++) {
+            int pivot = -1;
+            for (int row = rank; row < m; row++) {
+                if (Aug(row, col) != T()) {
+                    pivot = row;
+                    break;
+                }
+            }
+            if (pivot == -1) continue;
+            for (int j = 0; j <= n; j++) {
+                swap(Aug(pivot, j), Aug(rank, j));
+            }
+            T div = Aug(rank, col);
+            for (int j = col; j <= n; j++) {
+                Aug(rank, j) /= div;
+            }
+            for (int row = 0; row < m; row++) {
+                if (row == rank) continue;
+                T factor = Aug(row, col);
+                for (int j = col; j <= n; j++) {
+                    Aug(row, j) -= factor * Aug(rank, j);
+                }
+            }
+            where[col] = rank;
+            rank++;
+        }
+        for (int row = 0; row < m; row++) {
+            bool allZero = true;
+            for (int col = 0; col < n; col++) {
+                if (Aug(row, col) != T()) {
+                    allZero = false;
+                    break;
+                }
+            }
+            if (allZero && Aug(row, n) != T()) {
+                return {0, {}}; // no solution
+            }
+        }
+        for (int col = 0; col < n; col++) {
+            if (where[col] != -1) {
+                ans[col] = Aug(where[col], n);
+            }
+        }
+        if (rank < n) {
+            return {2, ans}; // infinite solutions
+        }
+        return {1, ans}; // unique solution
+    }
+
+    struct LUResult {
+        Matrix L;
+        Matrix U;
+        vector<int> p;
+        int swaps;
+    };
+
+    LUResult lu() const {
+        assert(R == C);
+        int n = R;
+        Matrix U = *this;
+        Matrix L = identity(n);
+        vector<int> p(n);
+        iota(p.begin(), p.end(), 0);
+        int swaps = 0;
+        for (int col = 0; col < n; col++) {
+            int pivot = col;
+            for (int row = col; row < n; row++) {
+                if (abs(U(row, col)) > abs(U(pivot, col))) pivot = row;
+            }
+            if (U(pivot, col) == T()) throw invalid_argument("Matrix is singular");
+            if (pivot != col) {
+                for (int j = 0; j < n; j++) swap(U(pivot, j), U(col, j));
+                for (int j = 0; j < col; j++) swap(L(pivot, j), L(col, j));
+                swap(p[pivot], p[col]);
+                swaps++;
+            }
+            for (int row = col + 1; row < n; row++) {
+                T factor = U(row, col) / U(col, col);
+                L(row, col) = factor;
+                for (int j = col; j < n; j++) U(row, j) -= factor * U(col, j);
+            }
+        }
+        return {L, U, p, swaps};
+    }
+
+    vector<T> solveLU(const vector<T>& b) const {
+        assert(R == C);
+        assert((int)b.size() == R);
+        int n = R;
+        LUResult res = lu();
+        vector<T> pb(n);
+        for (int i = 0; i < n; i++) pb[i] = b[res.p[i]];
+        vector<T> y(n);
+        for (int i = 0; i < n; i++) {
+            T sum = pb[i];
+            for (int j = 0; j < i; j++) sum -= res.L(i, j) * y[j];
+            y[i] = sum;
+        }
+        vector<T> x(n);
+        for (int i = n - 1; i >= 0; i--) {
+            T sum = y[i];
+            for (int j = i + 1; j < n; j++) sum -= res.U(i, j) * x[j];
+            x[i] = sum / res.U(i, i);
+        }
+        return x;
+    }
+
+    T determinantLU() const {
+        assert(R == C);
+        LUResult res = lu();
+        T det = (res.swaps % 2 ? -1 : 1);
+        for (int i = 0; i < R; i++) det *= res.U(i, i);
+        return det;
+    }
+
+    Matrix inverseLU() const {
+        assert(R == C);
+        int n = R;
+        Matrix inv(n, n);
+        LUResult res = lu();
+        for (int col = 0; col < n; col++) {
+            vector<T> b(n, 0);
+            b[col] = 1;
+            vector<T> pb(n);
+            for (int i = 0; i < n; i++) pb[i] = b[res.p[i]];
+            vector<T> y(n);
+            for (int i = 0; i < n; i++) {
+                T sum = pb[i];
+                for (int j = 0; j < i; j++) sum -= res.L(i, j) * y[j];
+                y[i] = sum;
+            }
+            vector<T> x(n);
+            for (int i = n - 1; i >= 0; i--) {
+                T sum = y[i];
+                for (int j = i + 1; j < n; j++) sum -= res.U(i, j) * x[j];
+                x[i] = sum / res.U(i, i);
+            }
+            for (int row = 0; row < n; row++) inv(row, col) = x[row];
+        }
+        return inv;
+    }
+
+    bool operator==(const Matrix& B) const {
+        if (R != B.R || C != B.C) return false;
+        for (int i = 0; i < R * C; i++) {
+            if (a[i] != B.a[i]) return false;
+        }
+        return true;
+    }
+
+    friend ostream& operator<<(ostream& os, const Matrix& M) {
+        for (int i = 0; i < M.R; i++) {
+            for (int j = 0; j < M.C; j++) {
+                os << M(i, j) << " ";
+            }
+            os << '\n';
+        }
+        return os;
+    }
+};
+
+int main() {
+    ios_base::sync_with_stdio(false);
+    cin.tie(NULL);
+    using M = Mint<>;
+    int n, m;
+    cin >> n >> m;
+    Matrix<M> A(n, m), B(n, 1);
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < m; j++) {
+            ll val;
+            cin >> val;
+            A(i, j) = val;
+        }
+        ll rhs;
+        cin >> rhs;
+        B(i, 0) = rhs;
+    }
+    Matrix<M> temp;
+    auto [type, ans] = temp.gauss(A, B);
+    if (type == 0) {
+        cout << -1 << '\n'; 
+    } else {
+        for (int i = 0; i < (int)ans.size(); i++) {
+            cout << ans[i] << ' ';
+        }
+        cout << '\n';
+    }
+    return 0;
+}
